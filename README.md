@@ -76,6 +76,19 @@ for issue in result.errors:
 | W131 | warning | unusual `model` value |
 | W900 | warning | unknown frontmatter field |
 
+## Use as a GitHub Action
+
+Add this step to any workflow:
+
+```yaml
+- uses: actions/checkout@v5
+- uses: MukundaKatta/claude-commands-check@v1
+  with:
+    paths: .claude/commands
+```
+
+The action runs the same checks as the CLI and fails the workflow on any errors. Inputs: `paths` (default `.claude/commands`), `quiet` (default `false`), `python-version` (default `3.12`).
+
 ## License
 
 MIT
