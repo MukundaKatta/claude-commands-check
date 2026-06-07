@@ -123,18 +123,26 @@ def _check_frontmatter(data: dict) -> list[Issue]:
         n = len(desc.strip())
         if n < MIN_DESCRIPTION_LEN:
             issues.append(
-                _warn("W101", f"'description' is too short ({n} chars); aim for at least {MIN_DESCRIPTION_LEN}")
+                _warn(
+                    "W101",
+                    f"'description' is too short ({n} chars); aim for at least {MIN_DESCRIPTION_LEN}",
+                )
             )
         elif n > MAX_DESCRIPTION_LEN:
             issues.append(
-                _err("E102", f"'description' is too long ({n} chars); keep under {MAX_DESCRIPTION_LEN}")
+                _err(
+                    "E102",
+                    f"'description' is too long ({n} chars); keep under {MAX_DESCRIPTION_LEN}",
+                )
             )
 
     for tools_key in ("allowed-tools", "disallowed-tools"):
         if tools_key in data:
             v = data[tools_key]
             if not isinstance(v, (str, list)):
-                issues.append(_err("E110", f"'{tools_key}' must be a string or list of strings"))
+                issues.append(
+                    _err("E110", f"'{tools_key}' must be a string or list of strings")
+                )
             elif isinstance(v, list):
                 for i, item in enumerate(v):
                     if not isinstance(item, str):
@@ -151,7 +159,9 @@ def _check_frontmatter(data: dict) -> list[Issue]:
         model = data["model"]
         if not isinstance(model, str):
             issues.append(_err("E130", "'model' must be a string"))
-        elif model not in KNOWN_MODELS and not model.startswith(("claude-", "opus-", "sonnet-", "haiku-")):
+        elif model not in KNOWN_MODELS and not model.startswith(
+            ("claude-", "opus-", "sonnet-", "haiku-")
+        ):
             issues.append(
                 _warn(
                     "W131",
@@ -184,7 +194,7 @@ def validate_command_source(source: str, path: str = "<string>") -> ValidationRe
     body = source
     if frontmatter_match:
         fm_text = frontmatter_match.group(1)
-        body = source[frontmatter_match.end():]
+        body = source[frontmatter_match.end() :]
         try:
             data = yaml.safe_load(fm_text)
         except yaml.YAMLError as exc:
@@ -195,7 +205,9 @@ def validate_command_source(source: str, path: str = "<string>") -> ValidationRe
             result.issues.append(_warn("W011", "frontmatter block is empty"))
         elif not isinstance(data, dict):
             result.issues.append(
-                _err("E012", f"frontmatter must be a mapping, got {type(data).__name__}")
+                _err(
+                    "E012", f"frontmatter must be a mapping, got {type(data).__name__}"
+                )
             )
         else:
             result.issues.extend(_check_frontmatter(data))
@@ -203,11 +215,15 @@ def validate_command_source(source: str, path: str = "<string>") -> ValidationRe
     # Body checks
     body_stripped = body.strip()
     if not body_stripped:
-        result.issues.append(_err("E200", "command body is empty; no prompt for Claude to execute"))
+        result.issues.append(
+            _err("E200", "command body is empty; no prompt for Claude to execute")
+        )
     else:
         for label, pat in SECRET_PATTERNS:
             if pat.search(source):
-                result.issues.append(_err("E300", f"possible {label} leaked in command file"))
+                result.issues.append(
+                    _err("E300", f"possible {label} leaked in command file")
+                )
 
     return result
 

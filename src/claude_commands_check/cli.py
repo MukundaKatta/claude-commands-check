@@ -41,7 +41,9 @@ def _format_human(results: list[ValidationResult]) -> str:
             else:
                 total_warnings += 1
     lines.append("")
-    lines.append(f"{len(results)} file(s), {total_errors} error(s), {total_warnings} warning(s)")
+    lines.append(
+        f"{len(results)} file(s), {total_errors} error(s), {total_warnings} warning(s)"
+    )
     return "\n".join(lines)
 
 
@@ -72,7 +74,9 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     if args.quiet:
         filtered = [
-            ValidationResult(path=r.path, issues=list(r.errors)) for r in results if r.errors
+            ValidationResult(path=r.path, issues=list(r.errors))
+            for r in results
+            if r.errors
         ]
         if filtered:
             print(_format_human(filtered))

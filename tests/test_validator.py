@@ -219,3 +219,104 @@ def test_severity_split() -> None:
     source = "---\n---\n"
     result = validate_command_source(source, path="bare.md")
     assert all(i.severity is Severity.ERROR for i in result.errors)
+
+
+def test_non_md_suffix_warns() -> None:
+    result = validate_command_source("body\n", path="my-cmd.markdown")
+    assert result.ok
+    assert "W001" in _codes(result.warnings)
+
+
+def test_missing_description_warns() -> None:
+    source = textwrap.dedent(
+        """\
+        ---
+        model: sonnet
+        ---
+        body
+        """
+    )
+    result = validate_command_source(source, path="nodesc.md")
+    assert result.ok
+    assert "W100" in _codes(result.warnings)
+
+
+def test_description_not_a_string_errors() -> None:
+    source = textwrap.dedent(
+        """\
+        ---
+        description: 12345
+        ---
+        body
+        """
+    )
+    result = validate_command_source(source, path="numdesc.md")
+    assert "E100" in _codes(result.errors)
+
+
+def test_description_too_long_errors() -> None:
+    long_desc = "a" * 501
+    source = f"---\ndescription: {long_desc}\n---\nbody\n"
+    result = validate_command_source(source, path="longdesc.md")
+    assert "E102" in _codes(result.errors)
+
+
+def test_allowed_tools_wrong_type_errors() -> None:
+    source = textwrap.dedent(
+        """\
+        ---
+        description: A valid long enough description for this slash command.
+        allowed-tools: 42
+        ---
+        body
+        """
+    )
+    result = validate_command_source(source, path="badtools.md")
+    assert "E110" in _codes(result.errors)
+
+
+def test_model_not_a_string_errors() -> None:
+    source = textwrap.dedent(
+        """\
+        ---
+        description: A valid long enough description for this slash command.
+        model: 42
+        ---
+        body
+        """
+    )
+    result = validate_command_source(source, path="badmodel.md")
+    assert "E130" in _codes(result.errors)
+
+
+def test_full_model_id_no_warning() -> None:
+    source = textwrap.dedent(
+        """\
+        ---
+        description: A valid long enough description for this slash command.
+        model: claude-3-5-sonnet-20241022
+        ---
+        body
+        """
+    )
+    result = validate_command_source(source, path="fullmodel.md")
+    assert result.ok
+    assert "W131" not in _codes(result.warnings)
+
+
+def test_empty_frontmatter_block_warns() -> None:
+    source = "---\n\n---\n\nbody\n"
+    result = validate_command_source(source, path="emptyfm.md")
+    assert "W011" in _codes(result.warnings)
+
+
+def test_validate_command_file_not_a_file(tmp_path: Path) -> None:
+    result = validate_command_file(tmp_path)  # a directory, not a file
+    assert "E000" in _codes(result.errors)
+
+
+def test_validate_command_file_invalid_utf8(tmp_path: Path) -> None:
+    p = tmp_path / "binary.md"
+    p.write_bytes(b"\xff\xfe\x00\x01not utf-8")
+    result = validate_command_file(p)
+    assert "E000" in _codes(result.errors)
